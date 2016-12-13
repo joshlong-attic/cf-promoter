@@ -31,7 +31,7 @@ import java.util.Map;
  * @author Josh Long
  */
 @SpringBootApplication
-public class BgApplication {
+public class PromoterApplication {
 
 	@Bean
 	ReactorCloudFoundryClient cloudFoundryClient(ConnectionContext connectionContext, TokenProvider tokenProvider) {
@@ -94,46 +94,42 @@ public class BgApplication {
 
 	@Bean
 	ApplicationRunner applicationRunner(
-			@Value("${bg.appName:cdlive}") String applicationName, Deployer deployer) {
-		return args -> {
-			deployer.deploy(applicationName);
-		};
+			@Value("${bg.appName:cdlive}") String applicationName, Promoter p) {
+		return args -> p.promote(applicationName);
 	}
 
 	public static void main(String[] args) {
-		SpringApplication.run(BgApplication.class, args);
+		SpringApplication.run(PromoterApplication.class, args);
 	}
-
-
 }
 
 @RestController
-class WebhookDeployer {
+class WebhookPromoter {
 
-	private final Deployer deployer;
+	private final Promoter promoter;
 
-	@PostMapping("/deploy")
-	public void deploy(@RequestBody Map<String, String> body) {
-		String packageName = body.get("package");
-		this.deployer.deploy(packageName);
+	WebhookPromoter(Promoter o) {
+		this.promoter = o;
 	}
 
-	public WebhookDeployer(Deployer deployer) {
-		this.deployer = deployer;
+	@PostMapping("/promote")
+	void promote(@RequestBody Map<String, String> body) {
+		String packageName = body.get("package");
+		this.promoter.promote(packageName);
 	}
 }
 
 
 @Component
-class Deployer {
+class Promoter {
 
 	private final CloudFoundryOperations cloudFoundryClient;
 
-	public Deployer(CloudFoundryOperations cloudFoundryClient) {
+	Promoter(CloudFoundryOperations cloudFoundryClient) {
 		this.cloudFoundryClient = cloudFoundryClient;
 	}
 
-	public void deploy(String appName) {
+	void promote(String appName) {
 
 		String live = appName + "-live", staging = appName + "-staging";
 
