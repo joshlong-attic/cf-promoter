@@ -1,5 +1,7 @@
 package com.example;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.cloudfoundry.client.CloudFoundryClient;
 import org.cloudfoundry.operations.CloudFoundryOperations;
 import org.cloudfoundry.operations.DefaultCloudFoundryOperations;
@@ -133,20 +135,29 @@ class Promoter {
 
 		String live = appName + "-live", staging = appName + "-staging";
 
-		this.cloudFoundryClient.routes()
-				.unmap(UnmapRouteRequest.builder()
-						.applicationName(appName)
-						.domain("cfapps.io")
-						.host(staging)
-						.build())
-				.block();
+		Log log = LogFactory.getLog(getClass());
+		try {
+			this.cloudFoundryClient.routes()
+					.unmap(UnmapRouteRequest.builder()
+							.applicationName(appName)
+							.domain("cfapps.io")
+							.host(staging)
+							.build())
+					.block();
+		} catch (Throwable t) {
+			log.error(t);
+		}
 
-		this.cloudFoundryClient.routes()
-				.map(MapRouteRequest.builder()
-						.applicationName(appName)
-						.domain("cfapps.io")
-						.host(live)
-						.build())
-				.block();
+		try {
+			this.cloudFoundryClient.routes()
+					.map(MapRouteRequest.builder()
+							.applicationName(appName)
+							.domain("cfapps.io")
+							.host(live)
+							.build())
+					.block();
+		} catch (Throwable t) {
+			log.error(t);
+		}
 	}
 }

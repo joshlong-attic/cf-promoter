@@ -3,7 +3,7 @@
 mvn clean install
 an=cf-promoter
 
-cf push -p target/bg*jar cf-promoter --no-start
+cf push -p target/*jar cf-promoter --no-start
 cf set-env $an CF_ORG $CF_ORG
 cf set-env $an CF_SPACE $CF_SPACE
 cf set-env $an CF_USER $CF_USER
